@@ -26,9 +26,9 @@ public class MainFrame
         this.setLayout(new BorderLayout());
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        this.setSize(800, 600);
+        this.setSize(1920, 1080);
 
-        // This method will be explained later
+
         this.initializeJogl();
 
         this.setVisible(true);
@@ -63,10 +63,7 @@ public class MainFrame
         this.animator.start();
     }
 
-
     public GLCanvas canvas;
-    @SuppressWarnings("unused")
-    double equation[] = { 1f, 1f, 1f, 1f};
 
     static Triplet<Float, Float, Float> colorRed = Triplet.with(0.7f, 0.1f, 0.0f);
     static Triplet<Float, Float, Float> colorBlue = Triplet.with(0.0f, 0.8f, 0.0f);
@@ -76,49 +73,19 @@ public class MainFrame
     static Triplet<Float, Float, Float> colorYellow = Triplet.with(0.7f, 0.8f, 0.0f);
 
     private GLU glu;
-    private float sunX = 0;
-    private float sunY = 0;
-    private float sunRadius = 0.1f;
-    private int houseDisplayList;
 
     public void init(GLAutoDrawable canvas) {
         GL2 gl = canvas.getGL().getGL2();
         glu = new GLU();
 
-        houseDisplayList = gl.glGenLists(1);
-        gl.glNewList(houseDisplayList, GL2.GL_COMPILE);
-        drawHouse(gl);
-        gl.glEndList();
-    }
-
-    private void drawHouse(GL2 gl) {
-        gl.glBegin(GL2.GL_TRIANGLES);
-
-        // Roof
-        gl.glColor3f(colorGreen.getValue0(), colorGreen.getValue1(), colorGreen.getValue2());
-        gl.glVertex2f(-0.5f, 0.5f);
-        gl.glVertex2f(0.5f, 0.5f);
-        gl.glVertex2f(0.0f, 0.75f);
-
-        // Left wall
-        gl.glColor3f(colorBlue.getValue0(), colorBlue.getValue1(), colorBlue.getValue2());
-        gl.glVertex2f(-0.5f, 0.5f);
-        gl.glVertex2f(-0.5f, -0.5f);
-        gl.glVertex2f(0.0f, 0.0f);
-
-        // Right wall
-        gl.glColor3f(colorRed.getValue0(), colorRed.getValue1(), colorRed.getValue2());
-        gl.glVertex2f(0.5f, 0.5f);
-        gl.glVertex2f(0.5f, -0.5f);
-        gl.glVertex2f(0.0f, 0.0f);
-
-        // Floor
-        gl.glColor3f(colorYellow.getValue0(), colorYellow.getValue1(), colorYellow.getValue2());
-        gl.glVertex2f(-0.5f, -0.5f);
-        gl.glVertex2f(0.5f, -0.5f);
-        gl.glVertex2f(0.0f, 0.0f);
-
-        gl.glEnd();
+        gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        gl.glViewport(0, 0, 640, 480);
+        gl.glMatrixMode(GL2.GL_PROJECTION);
+        gl.glLoadIdentity();
+        glu.gluOrtho2D(0.0, 640.0, 0.0, 480.0);
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        gl.glLoadIdentity();
+        gl.glEnable(GL2.GL_CULL_FACE);
     }
 
 
@@ -127,30 +94,32 @@ public class MainFrame
 
     }
 
-
     public void display(GLAutoDrawable canvas) {
         GL2 gl = canvas.getGL().getGL2();
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT);
 
-        // Draw the sun
-        gl.glColor3f(colorYellow.getValue0(), colorYellow.getValue1(), colorYellow.getValue2());
-        gl.glBegin(GL2.GL_POLYGON);
-        for (int i = 0; i < 360; i++) {
-            double angle = Math.toRadians(i);
-            gl.glVertex2d(sunX + sunRadius * Math.cos(angle), sunY + sunRadius * Math.sin(angle));
+        // Draw the chess board
+        int size = 8;
+        int squareSize = 16;
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                int x = i * squareSize;
+                int y = j * squareSize;
+                if ((i + j) % 2 == 0) {
+                    gl.glColor3f(1.0f, 1.0f, 1.0f); // white
+                } else {
+                    gl.glColor3f(0.0f, 0.0f, 0.0f); // black
+                }
+                gl.glBegin(GL2.GL_POLYGON);
+                gl.glVertex2i(x, y);
+                gl.glVertex2i(x + squareSize, y);
+                gl.glVertex2i(x + squareSize, y + squareSize);
+                gl.glVertex2i(x, y + squareSize);
+                gl.glEnd();
+            }
         }
-        gl.glEnd();
-
-        // Draw the house
-        gl.glCallList(houseDisplayList);
-
-        // Update the sun position
-        sunX += 0.01f;
-        if (sunX > 1.0f) {
-            sunX = -1.0f;
-        }
+        gl.glFlush();
     }
-
 
 
 
