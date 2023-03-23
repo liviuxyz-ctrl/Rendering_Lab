@@ -1,6 +1,7 @@
 import com.jogamp.opengl.*;
 import com.jogamp.opengl.awt.GLCanvas; // !! CU AWT
 import com.jogamp.opengl.fixedfunc.GLMatrixFunc;
+import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.GL2;
 import org.javatuples.Triplet;
@@ -35,8 +36,7 @@ public class MainFrame
 
     public Animator animator;
 
-    private void initializeJogl()
-    {
+    private void initializeJogl() {
 
         // Obtaining a reference to the default GL profile
         GLProfile glProfile = GLProfile.getDefault();
@@ -68,174 +68,101 @@ public class MainFrame
     @SuppressWarnings("unused")
     double equation[] = { 1f, 1f, 1f, 1f};
 
-    static Triplet<Float, Float, Float> colorRed = Triplet.with(1.0f, 0.0f, 0.0f);
-    static Triplet<Float, Float, Float> colorBlue = Triplet.with(0.0f, 1.0f, 0.0f);
-    static Triplet<Float, Float, Float> colorGreen = Triplet.with(0.0f, 0.0f, 1.0f);
-    static Triplet<Float, Float, Float> colorWhite = Triplet.with(1.0f, 1.0f, 1.0f);
+    static Triplet<Float, Float, Float> colorRed = Triplet.with(0.7f, 0.1f, 0.0f);
+    static Triplet<Float, Float, Float> colorBlue = Triplet.with(0.0f, 0.8f, 0.0f);
+    static Triplet<Float, Float, Float> colorGreen = Triplet.with(0.0f, 0.0f, 0.7f);
+    static Triplet<Float, Float, Float> colorWhite = Triplet.with(0.8f, 0.8f, 0.9f);
 
-    public void init(GLAutoDrawable canvas)
-    {
-        // Obtain the GL instance associated with the canvas.
+    static Triplet<Float, Float, Float> colorYellow = Triplet.with(0.7f, 0.8f, 0.0f);
+
+    private GLU glu;
+    private float sunX = 0;
+    private float sunY = 0;
+    private float sunRadius = 0.1f;
+    private int houseDisplayList;
+
+    public void init(GLAutoDrawable canvas) {
         GL2 gl = canvas.getGL().getGL2();
+        glu = new GLU();
 
-        // Set the clear color -- the color which will be used to reset the color buffer.
-        gl.glClearColor(0, 0, 0, 0);
-
-        // Select the Projection matrix.
-        gl.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
-
-        // Clear the projection matrix and set it to be the identity matrix.
-        gl.glLoadIdentity();
-
-        // Set the projection to be orthographic.
-        // It could have been as well-chosen to be perspective.
-        // Select the view volume to be x in the range of 0 to 1, y from 0 to 1 and z from -1 to 1.
-        gl.glOrtho(0, 1, 0, 1, -1, 1);
+        houseDisplayList = gl.glGenLists(1);
+        gl.glNewList(houseDisplayList, GL2.GL_COMPILE);
+        drawHouse(gl);
+        gl.glEndList();
     }
+
+    private void drawHouse(GL2 gl) {
+        gl.glBegin(GL2.GL_TRIANGLES);
+
+        // Roof
+        gl.glColor3f(colorGreen.getValue0(), colorGreen.getValue1(), colorGreen.getValue2());
+        gl.glVertex2f(-0.5f, 0.5f);
+        gl.glVertex2f(0.5f, 0.5f);
+        gl.glVertex2f(0.0f, 0.75f);
+
+        // Left wall
+        gl.glColor3f(colorBlue.getValue0(), colorBlue.getValue1(), colorBlue.getValue2());
+        gl.glVertex2f(-0.5f, 0.5f);
+        gl.glVertex2f(-0.5f, -0.5f);
+        gl.glVertex2f(0.0f, 0.0f);
+
+        // Right wall
+        gl.glColor3f(colorRed.getValue0(), colorRed.getValue1(), colorRed.getValue2());
+        gl.glVertex2f(0.5f, 0.5f);
+        gl.glVertex2f(0.5f, -0.5f);
+        gl.glVertex2f(0.0f, 0.0f);
+
+        // Floor
+        gl.glColor3f(colorYellow.getValue0(), colorYellow.getValue1(), colorYellow.getValue2());
+        gl.glVertex2f(-0.5f, -0.5f);
+        gl.glVertex2f(0.5f, -0.5f);
+        gl.glVertex2f(0.0f, 0.0f);
+
+        gl.glEnd();
+    }
+
 
     @Override
     public void dispose(GLAutoDrawable glAutoDrawable) {
 
     }
 
-    public void display(GLAutoDrawable canvas)
-    {
 
+    public void display(GLAutoDrawable canvas) {
         GL2 gl = canvas.getGL().getGL2();
+        gl.glClear(GL2.GL_COLOR_BUFFER_BIT);
 
-        // Each time the scene is redrawn we clear the color buffers which is perceived by the user as clearing the scene.
-
-        // Set the color buffer to be filled with the color black when cleared.
-        // It can be defined in the init function (method) also.
-        gl.glClearColor(0.0f, 0.0f, 0.0f, 0);
-
-        // Clear the color buffer.
-        gl.glClear(GL.GL_COLOR_BUFFER_BIT);
-        gl.glPointSize(5.0f); // Set point size to 5 pixels
-
-
-        circle(gl);
-//        point_square(gl);
-//        square_lines(gl);
-//        square_lines_s(gl);
-//        square_loop(gl);
-
-
-
-
-
-
-
-
-    }
-    @SuppressWarnings("unused")
-    private static void square_loop(GL2 gl) {
-        gl.glBegin(GL2.GL_LINE_LOOP);
-        gl.glVertex2f(0.2f, 0.2f);
-        gl.glVertex2f(0.2f, 0.4f);
-        gl.glVertex2f(0.4f, 0.4f);
-        gl.glVertex2f(0.4f, 0.2f);
-        gl.glEnd();
-    }
-    @SuppressWarnings("unused")
-    private static void circle(GL2 gl) {
-        gl.glBegin(GL2.GL_LINE_LOOP);
+        // Draw the sun
+        gl.glColor3f(colorYellow.getValue0(), colorYellow.getValue1(), colorYellow.getValue2());
+        gl.glBegin(GL2.GL_POLYGON);
         for (int i = 0; i < 360; i++) {
-            double angle = Math.PI * i / 180;
-            gl.glColor3f(colorRed.getValue0(), colorRed.getValue1(), colorRed.getValue2());
-            gl.glVertex2d(0.5 + Math.cos(angle) * 0.2, 0.5 + Math.sin(angle) * 0.2);
+            double angle = Math.toRadians(i);
+            gl.glVertex2d(sunX + sunRadius * Math.cos(angle), sunY + sunRadius * Math.sin(angle));
         }
         gl.glEnd();
-    }
-    @SuppressWarnings("unused")
-    private static void square_lines_s(GL2 gl) {
-        gl.glLineStipple(1, (short) 0x3F07);
-        gl.glEnable(GL2.GL_LINE_STIPPLE);
-        gl.glBegin(GL2.GL_LINES);
-            gl.glVertex2f(0.2f, 0.2f);
-            gl.glVertex2f(0.4f, 0.2f);
-            gl.glColor3f(colorRed.getValue0(), colorRed.getValue1(), colorRed.getValue2());
 
-            gl.glVertex2f(0.2f, 0.4f);
-            gl.glVertex2f(0.4f, 0.4f);
-            gl.glColor3f(colorBlue.getValue0(), colorBlue.getValue1(), colorBlue.getValue2());
+        // Draw the house
+        gl.glCallList(houseDisplayList);
 
-            gl.glVertex2f(0.2f, 0.2f);
-            gl.glVertex2f(0.2f, 0.4f);
-            gl.glColor3f(colorGreen.getValue0(), colorGreen.getValue1(), colorGreen.getValue2());
-
-            gl.glVertex2f(0.4f, 0.2f);
-            gl.glVertex2f(0.4f, 0.4f);
-            gl.glColor3f(colorWhite.getValue0(), colorWhite.getValue1(), colorWhite.getValue2());
-        gl.glEnd();
-    }
-    @SuppressWarnings("unused")
-    private static void square_lines(GL2 gl) {
-        gl.glBegin(GL2.GL_LINES);
-            gl.glVertex2f(0.2f, 0.2f);
-            gl.glVertex2f(0.4f, 0.2f);
-            gl.glColor3f(colorRed.getValue0(), colorRed.getValue1(), colorRed.getValue2());
-
-            gl.glVertex2f(0.2f, 0.4f);
-            gl.glVertex2f(0.4f, 0.4f);
-            gl.glColor3f(colorBlue.getValue0(), colorBlue.getValue1(), colorBlue.getValue2());
-
-            gl.glVertex2f(0.2f, 0.2f);
-            gl.glVertex2f(0.2f, 0.4f);
-            gl.glColor3f(colorGreen.getValue0(), colorGreen.getValue1(), colorGreen.getValue2());
-
-            gl.glVertex2f(0.4f, 0.2f);
-            gl.glVertex2f(0.4f, 0.4f);
-            gl.glColor3f(colorWhite.getValue0(), colorWhite.getValue1(), colorWhite.getValue2());
-        gl.glEnd();
-    }
-    @SuppressWarnings("unused")
-    private static void point_square(GL2 gl) {
-
-
-        gl.glBegin(GL2.GL_POINTS);
-            // Set the vertex color to Red.
-            gl.glColor3f(colorRed.getValue0(), colorRed.getValue1(), colorRed.getValue2());
-            gl.glVertex2f(0.2f, 0.2f);
-
-            // Set the vertex color to Green.
-            gl.glColor3f(colorGreen.getValue0(), colorGreen.getValue1(), colorGreen.getValue2());
-            gl.glVertex2f(0.4f, 0.2f);
-
-            // Set the vertex color to Blue.
-            gl.glColor3f(colorBlue.getValue0(), colorBlue.getValue1(), colorBlue.getValue2());
-            gl.glVertex2f(0.2f, 0.4f);
-
-            // Set the vertex color to White.
-            gl.glColor3f(colorWhite.getValue0(), colorWhite.getValue1(), colorWhite.getValue2());
-            gl.glVertex2f(0.4f, 0.4f);
-        gl.glEnd();
+        // Update the sun position
+        sunX += 0.01f;
+        if (sunX > 1.0f) {
+            sunX = -1.0f;
+        }
     }
 
-    public void reshape(GLAutoDrawable canvas, int left, int top, int width, int height)
-    {
+
+
+
+
+    public void reshape(GLAutoDrawable canvas, int left, int top, int width, int height) {
         GL2 gl = canvas.getGL().getGL2();
-
-        // Select the viewport -- the display area -- to be the entire widget.
         gl.glViewport(0, 0, width, height);
-
-        // Determine the width to height ratio of the widget.
-        double ratio = (double) width / (double) height;
-
-        // Select the Projection matrix.
-        gl.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
-
+        gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
-
-        // Select the view volume to be x in the range of 0 to 1, y from 0 to 1 and z from -1 to 1.
-        // We are careful to keep the aspect ratio and enlarging the width or the height.
-        if (ratio < 1)
-            gl.glOrtho(0, 1, 0, 1 / ratio, -1, 1);
-        else
-            gl.glOrtho(0, 1 * ratio, 0, 1, -1, 1);
-
-        // Return to the Model-view matrix.
-        gl.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
+        glu.gluOrtho2D(-1.0, 1.0, -1.0, 1.0);
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        gl.glLoadIdentity();
     }
 
     @SuppressWarnings("unused")
